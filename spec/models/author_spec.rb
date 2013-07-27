@@ -8,7 +8,6 @@ describe Author do
   it { should respond_to :disable_persistence }
   it { should respond_to :enable_persistence  }
   it { should respond_to :persistence_disabled }
-  it { should respond_to :persistence_disabled= }
   it { should respond_to :persistence_disabled? }
 
   describe "#disable_persistence" do
@@ -174,6 +173,59 @@ describe Author do
             end.should_not change { Author.count }
           end.should change { Book.count }
         end
+      end
+    end
+  end
+
+  it { subject.class.should respond_to :disable_persistence }
+  it { subject.class.should respond_to :enable_persistence  }
+  it { subject.class.should respond_to :persistence_disabled }
+  it { subject.class.should respond_to :persistence_disabled? }
+
+  context '#can_persist?' do
+    context 'when instance persistence disabled' do
+      before do
+        subject.disable_persistence
+        subject.persistence_disabled.should be_true
+      end
+
+      context 'when class persistence enabled' do
+        before do
+          subject.class.enable_persistence
+          subject.class.persistence_disabled?.should be_false
+        end
+        it { subject.send(:can_persist?).should be_false }
+      end
+
+      context 'when class persistence disabled' do
+        before do
+          subject.class.disable_persistence
+          subject.class.persistence_disabled?.should be_true
+        end
+        it { subject.send(:can_persist?).should be_false }
+      end
+    end
+
+    context 'when instance persistence enabled' do
+      before do
+        subject.enable_persistence
+        subject.persistence_disabled.should be_false
+      end
+
+      context 'when class persistence enabled' do
+        before do
+          subject.class.enable_persistence
+          subject.class.persistence_disabled?.should be_false
+        end
+        it { subject.send(:can_persist?).should be_true }
+      end
+
+      context 'when class persistence disabled' do
+        before do
+          subject.class.disable_persistence
+          subject.class.persistence_disabled?.should be_true
+        end
+        it { subject.send(:can_persist?).should be_false }
       end
     end
   end

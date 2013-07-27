@@ -2,28 +2,46 @@ module DisablePersistence
   extend ActiveSupport::Concern
 
   def disable_persistence
-    self.persistence_disabled = true
+    @persistence_disabled = true
   end
 
   def enable_persistence
-    self.persistence_disabled = false
+    @persistence_disabled = false
+  end
+
+  module ClassMethods
+    def disable_persistence
+      @@class_persistence_disabled = true
+    end
+
+    def enable_persistence
+      @@class_persistence_disabled = false
+    end
+
+    def persistence_disabled?
+      @@class_persistence_disabled ||= false
+    end
+
+    def persistence_disabled
+      persistence_disabled?
+    end
   end
 
   included do
-    attr_accessor :persistence_disabled
+    attr_reader :persistence_disabled
     alias :persistence_disabled? :persistence_disabled
 
-    before_save :check_for_persistence_flag
+    before_save :can_persist?
 
     after_initialize do |base|
-      base.persistence_disabled = false
+      base.instance_variable_set(:@persistence_disabled, false)
     end
 
-    def check_for_persistence_flag
-     !persistence_disabled?
+    def can_persist?
+      !persistence_disabled? && !self.class.persistence_disabled?
     end
 
-    protected :check_for_persistence_flag
+    protected :can_persist?
   end
 end
 
